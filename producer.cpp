@@ -23,6 +23,13 @@ void sem_signal(int sem_id, int sem_num)
     sembuf signal = {sem_num, 1, 0};
     semop(sem_id, &signal, 1);
 }
+void loggingMessage(string message, string commodity)
+{
+    auto now = chrono::system_clock::now();
+    time_t now_c = chrono::system_clock::to_time_t(now);
+    auto ms = chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch()) % 1000;
+    cerr << "[" << put_time(localtime(&now_c), "%T") << "." << setfill('0') << setw(3) << ms.count() << "] " << message << " " << commodity << endl;
+}
 
 int main(int argc, char *argv[])
 {
@@ -73,16 +80,21 @@ int main(int argc, char *argv[])
     while (true)
     {
         double value = distribution(generator);
+        loggingMessage("Generating new price " + to_string(value), commodity);
 
+        loggingMessage("checking if buffer is full", "");
         sem_wait(sem_id, 1);
+        loggingMessage("Waiting for control of buffer", "");
         sem_wait(sem_id, 0);
+        loggingMessage("Got control of buffer", "");
         int idx = buffer->producer_idx;
         buffer->buffer[idx] = value;
         buffer->producer_idx = (idx + 1) % bufferSize;
+        loggingMessage("Produced new price", commodity);
         sem_signal(sem_id, 0);
         sem_signal(sem_id, 2);
-
-        usleep(interval * 10000);
+        loggingMessage("Sleeping for " + to_string(interval / 1000) + " seconds", "");
+        usleep(interval * 1000);
     }
     return 0;
 }
