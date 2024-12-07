@@ -5,14 +5,17 @@
 #include <sys/shm.h>
 
 using namespace std;
+struct com{
+  double price;
+  char name[11];
+};
 
 struct shared_memory
 {
     int buffer_size;
     int consumer_idx;
     int producer_idx;
-    char commodity[11];
-    double buffer[];
+    com buffer[];
 };
 void sem_wait(int sem_id, int sem_num)
 {
@@ -66,9 +69,9 @@ int main(int argc, char *argv[])
     {
         sem_wait(sem_id, 2);
         sem_wait(sem_id, 0);
-        cout << "Consumer: " << buffer->buffer[buffer->consumer_idx] << endl;
-        double price = buffer->buffer[buffer->consumer_idx];
-        char *commodity = buffer->commodity;
+        // cout << "Consumer: " << buffer->buffer[buffer->consumer_idx] << endl;
+        double price = buffer->buffer[buffer->consumer_idx].price;
+        char *commodity = buffer->buffer[buffer->consumer_idx].name;
         buffer->consumer_idx = (buffer->consumer_idx + 1) % buffer->buffer_size;
         sem_signal(sem_id, 0);
         sem_signal(sem_id, 1);

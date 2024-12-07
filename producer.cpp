@@ -6,13 +6,18 @@
 
 using namespace std;
 
+
+struct com{
+  double price;
+  char name[11];
+};
+
 struct shared_memory
 {
     int buffer_size;
     int consumer_idx;
     int producer_idx;
-    char commodity[11];
-    double buffer[];
+    com buffer[];
 };
 void sem_wait(int sem_id, int sem_num)
 {
@@ -52,7 +57,7 @@ int main(int argc, char *argv[])
     // Create shared memory
     key_t shm_key = ftok("buffer", 65);
     key_t sem_key = ftok("sem", 66);
-    int shm_id = shmget(shm_key, sizeof(shared_memory) + bufferSize * sizeof(double), 0666 | IPC_CREAT);
+    int shm_id = shmget(shm_key, sizeof(shared_memory) + bufferSize * sizeof(com), 0666 | IPC_CREAT);
     if (shm_id == -1)
     {
         cerr << "Failed to create shared memory" << endl;
@@ -93,9 +98,9 @@ int main(int argc, char *argv[])
         sem_wait(sem_id, 0);
         loggingMessage("Got control of buffer", "");
         int idx = buffer->producer_idx;
-        buffer->buffer[idx] = value;
-        strcpy(buffer->commodity, commodity.c_str());
-        buffer->commodity[10] = '\0';
+        buffer->buffer[idx].price = value;
+        strcpy(buffer->buffer[idx].name, commodity.c_str());
+        buffer->buffer[idx].name[10] = '\0';
         buffer->producer_idx = (idx + 1) % bufferSize;
         loggingMessage("Produced new price", commodity);
         sem_signal(sem_id, 0);
