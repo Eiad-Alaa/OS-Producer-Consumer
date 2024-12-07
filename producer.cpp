@@ -11,6 +11,7 @@ struct shared_memory
     int buffer_size;
     int consumer_idx;
     int producer_idx;
+    char commodity[11];
     double buffer[];
 };
 void sem_wait(int sem_id, int sem_num)
@@ -39,6 +40,10 @@ int main(int argc, char *argv[])
         return 1;
     }
     string commodity = argv[1];
+    for (auto &c : commodity)
+    {
+        c = toupper(c);
+    }
     double mean = stod(argv[2]);
     double stdDev = stod(argv[3]);
     double interval = stod(argv[4]);
@@ -89,6 +94,8 @@ int main(int argc, char *argv[])
         loggingMessage("Got control of buffer", "");
         int idx = buffer->producer_idx;
         buffer->buffer[idx] = value;
+        strcpy(buffer->commodity, commodity.c_str());
+        buffer->commodity[10] = '\0';
         buffer->producer_idx = (idx + 1) % bufferSize;
         loggingMessage("Produced new price", commodity);
         sem_signal(sem_id, 0);
