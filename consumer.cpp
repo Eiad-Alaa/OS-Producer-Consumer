@@ -5,9 +5,10 @@
 #include <sys/shm.h>
 
 using namespace std;
-struct com{
-  double price;
-  char name[11];
+struct com
+{
+    double price;
+    char name[11];
 };
 
 struct shared_memory
@@ -31,8 +32,9 @@ map<string, vector<double>> comodities;
 
 void dashboard()
 {
+    system("clear");
     cout << "+-----------------+-----------------+-----------------+" << endl;
-    cout << "| Commodity       | Price            | AvgPrice          |" << endl;
+    cout << "| Commodity       | Price            | AvgPrice       |" << endl;
     cout << "+-----------------+-----------------+-----------------+" << endl;
     for (auto &commodity : comodities)
     {
@@ -52,19 +54,28 @@ int main(int argc, char *argv[])
     int bufferSize = stoi(argv[1]);
     key_t shm_key = ftok("buffer", 65);
     key_t sem_key = ftok("sem", 66);
-    int shm_id = shmget(shm_key, 0, 0666);
+    int shm_id = shmget(shm_key, sizeof(shared_memory) + bufferSize * sizeof(com), 0666 | IPC_CREAT);
     if (shm_id == -1)
     {
-        cout << "Failed to get shared memory" << endl;
+        cout << "Failed to create shared memory" << endl;
         return 1;
     }
-    int sem_id = semget(sem_key, 3, 0666);
+    int sem_id = semget(sem_key, 3, 0666 | IPC_CREAT);
     if (sem_id == -1)
     {
-        cout << "Failed to get semaphore" << endl;
+        cout << "Failed to create semaphore" << endl;
         return 1;
     }
     shared_memory *buffer = (shared_memory *)shmat(shm_id, NULL, 0);
+    if (buffer->buffer_size == 0)
+    {
+        buffer->buffer_size = bufferSize;
+        buffer->consumer_idx = 0;
+        buffer->producer_idx = 0;
+        semctl(sem_id, 0, SETVAL, 1);
+        semctl(sem_id, 1, SETVAL, buffer->buffer_size);
+        semctl(sem_id, 2, SETVAL, 0);
+    }
     while (true)
     {
         sem_wait(sem_id, 2);

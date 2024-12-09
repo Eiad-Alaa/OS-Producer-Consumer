@@ -6,10 +6,10 @@
 
 using namespace std;
 
-
-struct com{
-  double price;
-  char name[11];
+struct com
+{
+    double price;
+    char name[11];
 };
 
 struct shared_memory
@@ -57,34 +57,24 @@ int main(int argc, char *argv[])
     // Create shared memory
     key_t shm_key = ftok("buffer", 65);
     key_t sem_key = ftok("sem", 66);
-    int shm_id = shmget(shm_key, sizeof(shared_memory) + bufferSize * sizeof(com), 0666 | IPC_CREAT);
+    int shm_id = shmget(shm_key, 0, 0666);
     if (shm_id == -1)
     {
-        cerr << "Failed to create shared memory" << endl;
+        cerr << "Failed to get shared memory" << endl;
         return 1;
     }
     shared_memory *buffer = (shared_memory *)shmat(shm_id, NULL, 0);
-    int sem_id = semget(sem_key, 3, 0666 | IPC_CREAT);
+    int sem_id = semget(sem_key, 3, 0666);
     if (sem_id == -1)
     {
-        cerr << "Failed to create semaphore" << endl;
+        cerr << "Failed to get semaphore" << endl;
         return 1;
     }
-    if (buffer->buffer_size == 0)
-    {
-        buffer->buffer_size = bufferSize;
-        buffer->consumer_idx = 0;
-        buffer->producer_idx = 0;
-        semctl(sem_id, 0, SETVAL, 1);
-        semctl(sem_id, 1, SETVAL, buffer->buffer_size);
-        semctl(sem_id, 2, SETVAL, 0);
-    }
-    else if (buffer->buffer_size != bufferSize)
+    if (buffer->buffer_size != bufferSize)
     {
         cerr << "Buffer size mismatch" << endl;
         return 1;
     }
-
     default_random_engine generator(random_device{}());
     normal_distribution<double> distribution(mean, stdDev);
     while (true)
