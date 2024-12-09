@@ -29,18 +29,20 @@ void sem_signal(int sem_id, int sem_num)
     semop(sem_id, &signal, 1);
 }
 map<string, vector<double>> comodities;
-
+map<string, pair<double, string>> prices;
 void dashboard()
 {
     system("clear");
     cout << "+-----------------+-----------------+-----------------+" << endl;
-    cout << "| Commodity       | Price            | AvgPrice       |" << endl;
+    cout << "| Commodity       | Price           | AvgPrice        |" << endl;
     cout << "+-----------------+-----------------+-----------------+" << endl;
     for (auto &commodity : comodities)
     {
         double sum = accumulate(commodity.second.begin(), commodity.second.end(), 0.0);
         double avg = sum / commodity.second.size();
-        cout << "| " << setw(15) << left << commodity.first << " | " << setw(15) << right << commodity.second.back() << " | " << setw(15) << right << avg << " |" << endl;
+        string avg_arrow = prices[commodity.first].first > avg ? "↓" : "↑";
+        prices[commodity.first] = {avg, commodity.second.back() < avg ? "↓" : "↑"};
+        cout << "| " << setw(15) << left << commodity.first << " | " << setw(14) << right << commodity.second.back() << prices[commodity.first].second << " | " << setw(14) << right << avg << avg_arrow << " |" << endl;
     }
     cout << "+-----------------+-----------------+-----------------+" << endl;
 }
@@ -67,14 +69,16 @@ int main(int argc, char *argv[])
         return 1;
     }
     shared_memory *buffer = (shared_memory *)shmat(shm_id, NULL, 0);
-    if (buffer->buffer_size == 0)
+    buffer->buffer_size = bufferSize;
+    buffer->consumer_idx = 0;
+    buffer->producer_idx = 0;
+    semctl(sem_id, 0, SETVAL, 1);
+    semctl(sem_id, 1, SETVAL, buffer->buffer_size);
+    semctl(sem_id, 2, SETVAL, 0);
+    for (auto &com : prices)
     {
-        buffer->buffer_size = bufferSize;
-        buffer->consumer_idx = 0;
-        buffer->producer_idx = 0;
-        semctl(sem_id, 0, SETVAL, 1);
-        semctl(sem_id, 1, SETVAL, buffer->buffer_size);
-        semctl(sem_id, 2, SETVAL, 0);
+        com.second.first = 0;
+        com.second.second = "";
     }
     while (true)
     {
