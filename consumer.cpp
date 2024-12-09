@@ -41,11 +41,21 @@ void dashboard()
         double sum = accumulate(commodity.second.begin(), commodity.second.end(), 0.0);
         double avg = sum / commodity.second.size();
         string avg_arrow = prices[commodity.first].first > avg ? "↓" : "↑";
+        string avg_str = to_string(avg).substr(0, 7) + avg_arrow; // Limit decimal places
         prices[commodity.first] = {avg, commodity.second.back() < avg ? "↓" : "↑"};
-        cout << "| " << setw(15) << left << commodity.first << " | " << setw(14) << right << commodity.second.back() << prices[commodity.first].second << " | " << setw(14) << right << avg << avg_arrow << " |" << endl;
+        string price = to_string(commodity.second.back()).substr(0, 7) + prices[commodity.first].second;
+
+        string colored_price = prices[commodity.first].second == "↓" ? "\033[1;31m" + price + "\033[0m" : "\033[1;32m" + price + "\033[0m";
+        string colored_avg = avg_arrow == "↓" ? "\033[1;31m" + avg_str + "\033[0m" : "\033[1;32m" + avg_str + "\033[0m";
+
+        cout << "| " << setw(15) << left << commodity.first
+             << " | " << setw(28) << colored_price
+             << " | " << setw(28) << colored_avg
+             << " |" << endl;
     }
     cout << "+-----------------+-----------------+-----------------+" << endl;
 }
+
 int main(int argc, char *argv[])
 {
     if (argc != 2)
