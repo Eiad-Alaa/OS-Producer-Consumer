@@ -41,7 +41,7 @@ void dashboard()
         double sum = accumulate(commodity.second.begin(), commodity.second.end(), 0.0);
         double avg = sum / commodity.second.size();
         string avg_arrow = prices[commodity.first].first > avg ? "↓" : "↑";
-        string avg_str = to_string(avg).substr(0, 7) + avg_arrow; // Limit decimal places
+        string avg_str = to_string(avg).substr(0, 7) + avg_arrow; 
         prices[commodity.first] = {avg, commodity.second.back() < avg ? "↓" : "↑"};
         string price = to_string(commodity.second.back()).substr(0, 7) + prices[commodity.first].second;
 
