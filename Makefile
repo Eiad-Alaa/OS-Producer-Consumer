@@ -2,7 +2,7 @@ all : consumer producer
 
 
 consumer : consumer.cpp
-	gg++ -o consumer consumer.cpp
+	g++ -o consumer consumer.cpp
 
 producer : producer.cpp
 	g++ -o producer producer.cpp
